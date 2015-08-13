@@ -168,9 +168,10 @@ module Anemone
     #
     # Returns +true+ if *uri* is in the same domain as the page, returns
     # +false+ otherwise
+    # Treat xxx.com and www.xxx.com are in the same domain
     #
     def in_domain?(uri)
-      uri.host == @url.host
+      uri.host == @url.host || uri.host.gsub(/^www\./i, '') == @uri.host.gsub(/^www\./i, '')
     end
 
     def marshal_dump
