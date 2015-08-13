@@ -59,8 +59,26 @@ module Anemone
       @links = []
       return @links if !doc
 
+      raw_links = []
+
+      # tag A
       doc.search("//a[@href]").each do |a|
-        u = a['href']
+        raw_links << a['href']
+      end
+      # tag frame
+      doc.search("//frame[@src]").each do |frame|
+        raw_links << frame['src']
+      end
+      # tag iframe
+      doc.search("//iframe[@src]").each do |iframe|
+        raw_links << iframe['src']
+      end
+      # tag area
+      doc.search("//area[@href]").each do |area|
+        raw_links << area['href']
+      end
+
+      raw_links.each do |u|
         next if u.nil? or u.empty?
         abs = to_absolute(u) rescue next
         @links << abs if in_domain?(abs)
@@ -160,7 +178,7 @@ module Anemone
       relative = URI(link)
       absolute = base ? base.merge(relative) : @url.merge(relative)
 
-      absolute.path = '/' if absolute.path.empty?
+      absolute.path = '/' if absolute.path.blank?
 
       return absolute
     end
@@ -171,7 +189,7 @@ module Anemone
     # Treat xxx.com and www.xxx.com are in the same domain
     #
     def in_domain?(uri)
-      uri.host == @url.host || uri.host.gsub(/^www\./i, '') == @uri.host.gsub(/^www\./i, '')
+      uri.host == @url.host || uri.host.to_s.gsub(/^www\./i, '') == @url.host.to_s.gsub(/^www\./i, '')
     end
 
     def marshal_dump
