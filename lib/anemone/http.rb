@@ -109,13 +109,24 @@ module Anemone
           # if redirected to a relative url, merge it with the host of the original
           # request url
           loc = url.merge(loc) if loc.relative?
-
           response, response_time = get_response(loc, referer)
           code = Integer(response.code)
           redirect_to = response.is_a?(Net::HTTPRedirection) ? URI(response['location']).normalize : nil
+          redirect_to ||= get_redirect_to_from_meta(response.body)
           yield response, code, loc, redirect_to, response_time
           limit -= 1
       end while (loc = redirect_to) && allowed?(redirect_to, url) && limit > 0
+    end
+
+    def get_redirect_to_from_meta(body)
+      doc = Nokogiri::HTML(body)
+      meta = doc.css('meta').find{|ele| ele.attr('http-equiv') =~ /^refresh$/i }
+      return nil if meta.nil?
+      content = meta.attr('content')
+      return nil if content.nil?
+      matches = content.match(/\bURL=([^ ]+)/i)
+      return nil if matches.nil?
+      URI(matches[1]).normalize
     end
 
     #
@@ -180,7 +191,7 @@ module Anemone
     # Allowed to connect to the requested url?
     #
     def allowed?(to_url, from_url)
-      to_url.host.nil? || (to_url.host == from_url.host)
+      to_url.host.nil? || (to_url.host.gsub(/^www\./i, '').downcase == from_url.host.gsub(/^www\./i, '').downcase)
     end
 
   end
