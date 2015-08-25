@@ -176,8 +176,7 @@ module Anemone
       # remove anchor
       # comment this line since there are some Ajax website use anchor
       # link = URI.encode(URI.decode(link.to_s.gsub(/#[a-zA-Z0-9_-]*$/,'')))
-      link = link.gsub(/#+$/, '')
-      link = link.gsub(/[{}]/, '')
+      link = link.to_s.gsub(/#+$/, '').gsub(/[{}]/, '')
 
       relative = URI(link)
       absolute = base ? base.merge(relative) : @url.merge(relative)
